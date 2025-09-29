@@ -1,0 +1,7 @@
+Deployment guide: 
+1. download packages then run the cmds below: 
+npm install
+node server.js
+python3 -m http.server 8001
+pm2 start covid19
+Note: please include .env for api keys and other credentials, .gitignore is plus
