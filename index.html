@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHO COVID-19 Dashboard</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap">
+    <link rel="stylesheet" href="style.css?v=7">
+
+</head>
+<body>
+<div id="notification-container"></div>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-virus"></i>
+                <div class="logo-text">COVID19 Dashboard</div>
+            </div>
+            
+            <button class="menu-toggle" aria-label="Toggle navigation menu">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <nav class="nav-menu">
+                <ul>
+                    <li data-target="overview" class="active"><a href="#"><i class="fas fa-chart-line"></i> Overview</a></li>
+                    <li data-target="news"><a href="#"><i class="fas fa-newspaper"></i> News</a></li>
+                    <li data-target="publications"><a href="#"><i class="fas fa-book"></i> Publications</a></li>
+                    <li data-target="visitor-info"><a href="#"><i class="fas fa-user-secret"></i> Visitor Info</a></li>
+                    <li data-target="user-profile" id="user-profile-nav" style="display: none;"><a href="#"><i class="fas fa-user"></i> My Profile</a></li>
+                    <li data-target="contact"><a href="#"><i class="fas fa-envelope"></i> Contact us</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="header">
+                <div class="search-bar">
+                    <input type="text" placeholder="Search...">
+                    <i class="fas fa-search"></i>
+                </div>
+                <div class="user-info">
+                    <i class="fas fa-bell"></i>
+                    <div class="user-profile" id="user-profile">
+                        <i class="fas fa-user-circle" id="user-icon"></i>
+                        <span id="user-name">Guest</span>
+                        <div class="user-dropdown" id="user-dropdown">
+                            <a href="#" id="login-btn">Login</a>
+                            <a href="#" id="register-btn">Register</a>
+                            <a href="#" id="logout-btn" style="display: none;">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="overview" class="content-view active">
+                <div class="content-grid">
+                    <div class="card map-card">
+                        <div id="map"></div>
+                    </div>
+
+                    <div class="right-column">
+
+                        <div class="card video-card">
+                            <h4>Featured Videos</h4>
+                            <div class="video-list" id="youtube-videos-list">
+                                <div class="video-item">
+                                    <img src="https://i.ytimg.com/vi/b5A674w-r7U/hqdefault.jpg" alt="Video Thumbnail" onerror="this.onerror=null;this.src='/img/placeholder.png';">
+                                    <div class="video-info">
+                                        <a href="https://www.youtube.com/watch?v=b5A674w-r7U" class="video-link" target="_blank">
+                                            LIVE: The WHO gives a COVID-19 update after a record one-day rise in global cases
+                                        </a>
+                                        <span>Published: May 23, 2020</span>
+                                    </div>
+                                </div>
+                                <div class="video-item">
+                                    <img src="https://i.ytimg.com/vi/a9y_BfR8e6o/hqdefault.jpg" alt="Video Thumbnail" onerror="this.onerror=null;this.src='/img/placeholder.png';">
+                                    <div class="video-info">
+                                        <a href="https://www.youtube.com/watch?v=a9y_BfR8e6o" class="video-link" target="_blank">
+                                            COVID-19 - The pandemic and your mental health
+                                        </a>
+                                        <span>Published: July 15, 2020</span>
+                                    </div>
+                                </div>
+                                <div class="video-item">
+                                    <img src="https://i.ytimg.com/vi/d9k_wV43S8Y/hqdefault.jpg" alt="Video Thumbnail" onerror="this.onerror=null;this.src='/img/placeholder.png';">
+                                    <div class="video-info">
+                                        <a href="https://www.youtube.com/watch?v=d9k_wV43S8Y" class="video-link" target="_blank">
+                                            WHO: How to protect yourself from the new Coronavirus
+                                        </a>
+                                        <span>Published: March 10, 2020</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card social-card">
+                            <h4>Social Feed</h4>
+                            <div class="social-item">
+                                <i class="fab fa-twitter"></i>
+                                <p>@WHO: WHO COVID-19 Q&A #COVID19 #Health ...</p>
+                            </div>
+                            <div class="social-item">
+                                <i class="fab fa-facebook"></i>
+                                <p>Host: Lisa Blomfmi #COVID19 #Health ...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bottom-row">
+                        <div class="card chart-card">
+                            <h4>Global Cases Trends</h4>
+                            <div class="chart-container">
+                                <canvas id="cases-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="card stats-card">
+                            <h4>Key Statistics</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <p>Confirmed Cases:</p>
+                                    <span id="confirmed-cases">...</span>
+                                </div>
+                                <div class="stat-item">
+                                    <p>Deaths:</p>
+                                    <span id="deaths">...</span>
+                                </div>
+                                <div class="stat-item">
+                                    <p>Recovered:</p>
+                                    <span id="recovered">...</span>
+                                </div>
+                                <div class="stat-item">
+                                    <p>Total Recovered:</p>
+                                    <span id="total-recovered">...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card news-card">
+                            <h4>Recent News</h4>
+                            <div class="news-item">
+                                <img src="https://via.placeholder.com/50" alt="News thumbnail">
+                                <p>New Variant Discovered in Europe</p>
+                            </div>
+                            <div class="news-item">
+                                <img src="https://via.placeholder.com/50" alt="News thumbnail">
+                                <p>Vaccine Rollout Rates Decline</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="news" class="content-view">
+                <div class="card">
+                    <h2>Latest News</h2>
+                    <p>Content for the news page goes here.</p>
+                </div>
+            </div>
+
+            <div id="publications" class="content-view">
+                <div class="card">
+                    <h2>Publications</h2>
+                    <p>This page will showcase important publications and studies.</p>
+                </div>
+            </div>
+
+            <div id="contact" class="content-view">
+                <div class="card">
+                    <h2>Contact Us</h2>
+                    <p>Contact information goes here.</p>
+                </div>
+            </div>
+
+            <div id="visitor-info" class="content-view">
+                <div class="card">
+                    <h2>Visitor Information</h2>
+                    <div class="visitor-info-container">
+                        <div class="info-section">
+                            <h3><i class="fas fa-globe"></i> Network Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>IP Address:</label>
+                                    <span id="visitor-ip">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Country:</label>
+                                    <span id="visitor-country">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>City:</label>
+                                    <span id="visitor-city">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>ISP:</label>
+                                    <span id="visitor-isp">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="info-section">
+                            <h3><i class="fas fa-desktop"></i> Device Information</h3>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <label>Operating System:</label>
+                                    <span id="visitor-os">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Browser:</label>
+                                    <span id="visitor-browser">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Screen Resolution:</label>
+                                    <span id="visitor-resolution">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Language:</label>
+                                    <span id="visitor-language">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Timezone:</label>
+                                    <span id="visitor-timezone">Loading...</span>
+                                </div>
+                                <div class="info-item">
+                                    <label>Access Time:</label>
+                                    <span id="visitor-time">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="user-profile" class="content-view">
+                <div class="card">
+                    <h2>My Profile</h2>
+                    <div class="profile-container">
+                        <div class="profile-info">
+                            <div class="profile-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="profile-details">
+                                <h3 id="profile-name">Loading...</h3>
+                                <p id="profile-email">Loading...</p>
+                                <p id="profile-join-date">Loading...</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-stats">
+                            <div class="stat-item">
+                                <label>Total Logins:</label>
+                                <span id="profile-login-count">Loading...</span>
+                            </div>
+                            <div class="stat-item">
+                                <label>Last Login:</label>
+                                <span id="profile-last-login">Loading...</span>
+                            </div>
+                        </div>
+                        
+                        <div class="login-history">
+                            <h3>Recent Login History</h3>
+                            <div id="login-history-list">
+                                <p>Loading login history...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="footer">
+                <div class="sponsors">
+                    <img src="https://dhajnmjbv8dxf.cloudfront.net/images/unicef_logo.png" alt="UNICEF">
+                    <img src="images/gavi_logo.png" alt="GAVI">
+                    <img src="images/doctors_logo.png" alt="Doctors">
+                    <img src="images/borders_logo.png" alt="Borders">
+                </div>
+                <button class="donate-btn">DONATE NOW</button>
+            </footer>
+
+        </main>
+    </div>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Login</h2>
+                <span class="close" id="close-login">&times;</span>
+            </div>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-email">Email:</label>
+                    <input type="email" id="login-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password:</label>
+                    <input type="password" id="login-password" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+            <p class="modal-switch">Don't have an account? <a href="#" id="switch-to-register">Register here</a></p>
+        </div>
+    </div>
+
+    <div id="register-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Register</h2>
+                <span class="close" id="close-register">&times;</span>
+            </div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="register-name">Full Name:</label>
+                    <input type="text" id="register-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-email">Email:</label>
+                    <input type="email" id="register-email" required>
+                </div>
+                <div class="form-group">
+                    <label for="register-password">Password:</label>
+                    <input type="password" id="register-password" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">Confirm Password:</label>
+                    <input type="password" id="register-confirm-password" required autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+            <p class="modal-switch">Already have an account? <a href="#" id="switch-to-login">Login here</a></p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="script.js"></script>
+    <script src="youtube.js"></script>
+</body>
+</html>
