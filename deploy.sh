@@ -3,38 +3,56 @@
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
-# --- SECTION 1: SYSTEM & PACKAGE SETUP ---
+echo "--- Starting Automated Deployment Script ---"
+
+# --- SECTION 1: SYSTEM UPDATES AND PREREQUISITES ---
 
 echo "--- Updating system packages ---"
 sudo yum update -y
 
-echo "--- Installing core system tools ---"
+echo "--- Installing EPEL repository via RPM ---"
+# Check OS version to get the correct RPM link
+if grep -q "release 7" /etc/redhat-release; then
+    sudo wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    sudo rpm -ihv epel-release-latest-7.noarch.rpm
+elif grep -q "release 8" /etc/redhat-release; then
+    sudo wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    sudo rpm -ihv epel-release-latest-8.noarch.rpm
+else
+    echo "Warning: Could not determine RHEL/CentOS version. Attempting to install generic EPEL RPM."
+    sudo wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm || true
+    sudo rpm -ihv epel-release-latest-9.noarch.rpm || true
+fi
+
+# Clean yum cache to ensure the new repository is recognized
+sudo yum clean all
+sudo yum -y makecache
+
+echo "--- Installing core system tools (httpd, python3-pip, snapd) ---"
 sudo yum install -y httpd python3-pip snapd
+
+# Start and enable the snapd service
+echo "--- Starting and enabling the snapd service ---"
+sudo systemctl enable --now snapd.socket
 
 # --- SECTION 2: PYTHON DEPENDENCIES ---
 
 echo "--- Installing Python dependencies from requirements.txt ---"
-# It's best practice to use a requirements.txt file for Python dependencies.
-# Create a requirements.txt file in your project with the following content:
-# pandas
-# python-dateutil==2.9.0
-# boto3
-# Note: The version of python-dateutil should be managed here.
-
-pip3 install -r requirements.txt
+# This assumes you have a 'requirements.txt' file in your project directory
+sudo pip3 install -r requirements.txt
 
 # --- SECTION 3: NODE.JS DEPENDENCIES ---
 
 echo "--- Installing Node.js dependencies from package.json ---"
-# The 'npm install' command reads package.json and installs all dependencies.
-# The `npm install <package>` commands are not needed if they are in your package.json.
+# This assumes you have a 'package.json' file in your project directory
+# and that Node.js and npm are already installed.
 npm install
 
 # --- SECTION 4: APPLICATION START ---
 
 echo "--- Starting Node.js application with PM2 ---"
-# This assumes your PM2 configuration file is set up correctly for the 'covid19' process.
-# This also assumes you've already configured PM2 to run as a service.
+# This command starts your application using PM2.
+# You must have PM2 configured to recognize the 'covid19' process.
 pm2 start covid19
 
 echo "--- Deployment completed successfully ---"
